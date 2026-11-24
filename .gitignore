@@ -1,0 +1,15 @@
+node_modules/
+data/
+recordings/
+mediamtx.exe
+*.log
+# 本地 AI agent 工具缓存（OpenCode / Qoder）
+.omo/
+.qoder/
+.codegraph/
+# 调试脚本
+.debug-*.js
+# PID 跟踪文件
+.pids
+# SSL 证书私钥（不要上传）
+auto.key

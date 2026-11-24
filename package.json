@@ -1,0 +1,21 @@
+{
+  "name": "prismlive",
+  "version": "0.1.0",
+  "private": true,
+  "description": "私域直播平台：HLS 直播 + 实时弹幕 + 中控后台",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "mtx": "mediamtx mediamtx.yml"
+  },
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "dependencies": {
+    "echarts": "^5.5.1",
+    "express": "^4.21.2",
+    "hls.js": "^1.6.17",
+    "mpegts.js": "^1.8.1",
+    "socket.io": "^4.8.1"
+  }
+}

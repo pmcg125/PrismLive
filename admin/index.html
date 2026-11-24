@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>PrismLive 中控后台</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+  <div id="app">
+    <!-- 登录页 -->
+    <div id="login-screen" class="screen active">
+      <div class="login-card glass-card">
+        <h1 class="login-title">PrismLive 中控后台</h1>
+        <p class="login-hint">默认密码: admin123，登录后请及时修改</p>
+        <form id="login-form" class="login-form">
+          <input type="password" id="login-password" placeholder="请输入密码" class="login-input" autocomplete="off">
+          <button type="submit" class="btn btn-primary">登录</button>
+        </form>
+        <p id="login-error" class="login-error"></p>
+      </div>
+    </div>
+
+    <!-- 主控制台 -->
+    <div id="main-screen" class="screen">
+      <!-- 顶部移动端导航 -->
+      <button id="mobile-menu-toggle" class="mobile-menu-toggle" aria-label="展开菜单">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+
+      <!-- 侧边栏 -->
+      <nav id="sidebar" class="sidebar">
+        <div class="sidebar-header">
+          <div class="sidebar-logo"></div>
+          <h2 class="sidebar-title">PrismLive</h2>
+        </div>
+        <ul class="sidebar-menu">
+          <li class="sidebar-item active" data-section="dashboard">
+            <span class="sidebar-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>
+            <span class="sidebar-text">概览看板</span>
+          </li>
+          <li class="sidebar-item" data-section="settings">
+            <span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></span>
+            <span class="sidebar-text">直播间设置</span>
+          </li>
+          <li class="sidebar-item" data-section="users">
+            <span class="sidebar-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span>
+            <span class="sidebar-text">在线用户</span>
+            <span id="sidebar-users-badge" class="nav-badge hidden">0</span>
+          </li>
+          <li class="sidebar-item" data-section="blacklist">
+            <span class="sidebar-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></span>
+            <span class="sidebar-text">黑名单</span>
+          </li>
+          <li class="sidebar-item" data-section="password">
+            <span class="sidebar-icon"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg></span>
+            <span class="sidebar-text">修改密码</span>
+          </li>
+        </ul>
+        <div class="sidebar-footer">
+          <div id="socket-status" class="socket-status">
+            <span class="status-dot"></span>
+            <span class="status-text">实时连接中</span>
+          </div>
+        </div>
+      </nav>
+
+      <!-- 主内容区 -->
+      <main id="main-content" class="main-content">
+        <!-- 页面加载骨架屏 -->
+        <div id="page-skeleton" class="page-skeleton hidden">
+          <div class="skeleton-header"></div>
+          <div class="skeleton-grid">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
+          </div>
+        </div>
+
+        <!-- 概览看板 -->
+        <section id="section-dashboard" class="section active">
+          <h1 class="section-title">概览看板</h1>
+
+          <div class="stats-grid">
+            <div class="stat-card glass-card">
+              <div class="stat-label">当前在线</div>
+              <div class="stat-value" id="stat-online" data-value="0">0</div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="stat-label">峰值在线</div>
+              <div class="stat-value" id="stat-peak-online" data-value="0">0</div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="stat-label">今日观看人次</div>
+              <div class="stat-value" id="stat-today-views" data-value="0">0</div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="stat-label">累计弹幕</div>
+              <div class="stat-value" id="stat-total-danmaku" data-value="0">0</div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="stat-label">弹幕速率 (条/分)</div>
+              <div class="stat-value" id="stat-danmaku-per-min" data-value="0">0</div>
+            </div>
+            <div class="stat-card glass-card">
+              <div class="stat-label">累计点赞</div>
+              <div class="stat-value" id="stat-total-likes" data-value="0">0</div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card glass-card">
+              <h3 class="card-title">推流状态</h3>
+              <div class="status-row">
+                <span class="status-label">状态</span>
+                <span id="live-status" class="badge badge-offline">未推流</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">实时码率</span>
+                <span id="live-bitrate" class="status-value">0 kbps</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">推流时长</span>
+                <span id="live-duration" class="status-value">-</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">累计上行流量</span>
+                <span id="live-total-bytes" class="status-value">0 MB</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">媒体层读者数</span>
+                <span id="live-readers" class="status-value">0</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">播放引擎</span>
+                <span id="live-play-engine" class="status-value">-</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">MediaMTX (HLS)</span>
+                <span id="live-mtx-status" class="status-value">-</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">SRS (FLV)</span>
+                <span id="live-srs-status" class="status-value">-</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">MediaMTX 版本</span>
+                <span id="live-mtx-version" class="status-value">—</span>
+              </div>
+            </div>
+
+            <div class="card glass-card">
+              <h3 class="card-title">系统信息</h3>
+              <div class="status-row">
+                <span class="status-label">Node 版本</span>
+                <span id="sys-node" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">平台 / 架构</span>
+                <span id="sys-platform" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">CPU 使用率</span>
+                <span id="sys-cpu-usage" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">CPU 核数</span>
+                <span id="sys-cpu-count" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">总内存</span>
+                <span id="sys-mem-total" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">可用内存</span>
+                <span id="sys-mem-free" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">进程内存 (RSS)</span>
+                <span id="sys-process-rss" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">进程堆内存</span>
+                <span id="sys-process-heap" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">本机 IPv4</span>
+                <span id="sys-local-ip" class="status-value">—</span>
+              </div>
+              <div class="status-row">
+                <span class="status-label">运行时间</span>
+                <span id="sys-uptime" class="status-value">—</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card glass-card chart-card">
+            <div class="chart-header">
+              <h3 class="card-title">实时数据</h3>
+              <div class="chart-actions">
+                <button id="btn-export-stats" class="btn btn-secondary btn-sm" title="导出当前统计 CSV">导出 CSV</button>
+                <button id="btn-refresh-stats" class="btn btn-secondary btn-sm" title="立即刷新">刷新</button>
+              </div>
+            </div>
+            <div id="chart" class="chart"></div>
+          </div>
+
+          <div class="card glass-card link-diag-card">
+            <div class="chart-header">
+              <h3 class="card-title">链路诊断</h3>
+              <span class="diag-hint">每 15 秒自动探测</span>
+            </div>
+            <div class="diag-grid">
+              <div class="diag-item">
+                <div class="diag-title">frp 跳板 :8090 (FLV)</div>
+                <div class="diag-row">
+                  <span id="diag-frp-flv" class="diag-status diag-unknown">探测中</span>
+                  <span id="diag-frp-flv-lat" class="diag-meta">-</span>
+                </div>
+                <div class="diag-detail" id="diag-frp-flv-detail">-</div>
+              </div>
+              <div class="diag-item">
+                <div class="diag-title">frp 跳板 :8888 (HLS)</div>
+                <div class="diag-row">
+                  <span id="diag-frp-hls" class="diag-status diag-unknown">探测中</span>
+                  <span id="diag-frp-hls-lat" class="diag-meta">-</span>
+                </div>
+                <div class="diag-detail" id="diag-frp-hls-detail">-</div>
+              </div>
+              <div class="diag-item">
+                <div class="diag-title">flv.silvegg.top (ESA)</div>
+                <div class="diag-row">
+                  <span id="diag-dom-flv" class="diag-status diag-unknown">探测中</span>
+                  <span id="diag-dom-flv-lat" class="diag-meta">-</span>
+                </div>
+                <div class="diag-detail" id="diag-dom-flv-detail">-</div>
+              </div>
+              <div class="diag-item">
+                <div class="diag-title">stream.silvegg.top (ESA)</div>
+                <div class="diag-row">
+                  <span id="diag-dom-stream" class="diag-status diag-unknown">探测中</span>
+                  <span id="diag-dom-stream-lat" class="diag-meta">-</span>
+                </div>
+                <div class="diag-detail" id="diag-dom-stream-detail">-</div>
+              </div>
+              <div class="diag-item">
+                <div class="diag-title">live.silvegg.top (CF 隧道)</div>
+                <div class="diag-row">
+                  <span id="diag-dom-live" class="diag-status diag-unknown">探测中</span>
+                  <span id="diag-dom-live-lat" class="diag-meta">-</span>
+                </div>
+                <div class="diag-detail" id="diag-dom-live-detail">-</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 直播间设置 -->
+        <section id="section-settings" class="section">
+          <h1 class="section-title">直播间设置</h1>
+
+          <div class="grid-2">
+            <div class="card glass-card">
+              <h3 class="card-title">基础设置</h3>
+              <form id="settings-form" class="settings-form">
+                <div class="form-group">
+                  <label class="form-label">直播间标题</label>
+                  <input type="text" id="setting-liveTitle" class="form-input" placeholder="请输入直播间标题" maxlength="60">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">公告</label>
+                  <textarea id="setting-liveAnnouncement" class="form-textarea" placeholder="请输入公告内容" rows="4" maxlength="300"></textarea>
+                </div>
+                <div class="form-group form-group-row">
+                  <label class="form-label">开播开关</label>
+                  <div class="switch" id="switch-liveEnabled">
+                    <div class="switch-handle"></div>
+                  </div>
+                </div>
+                <div class="form-group form-group-row">
+                  <label class="form-label">弹幕总开关</label>
+                  <div class="switch" id="switch-danmakuEnabled">
+                    <div class="switch-handle"></div>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">播放引擎</label>
+                  <select id="setting-playEngine" class="form-input">
+                    <option value="hls">HLS（兼容）</option>
+                    <option value="flv">HTTP-FLV（低延迟）</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">FLV 基础地址覆盖 (可选，支持 &lt;key&gt; 占位符，留空使用默认 8090 端口)</label>
+                  <input type="text" id="setting-flvBaseUrl" class="form-input" placeholder="留空则自动生成，用 &lt;key&gt; 占位符">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">弹幕速率上限 (条/秒，1-100)</label>
+                  <input type="number" id="setting-danmakuRateLimit" class="form-input" min="1" max="100" value="5">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">敏感词 (逗号分隔)</label>
+                  <input type="text" id="setting-sensitiveWords" class="form-input" placeholder="请输入敏感词，用逗号分隔">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">HLS 基础地址覆盖 (可选)</label>
+                  <input type="text" id="setting-hlsBaseUrl" class="form-input" placeholder="留空则自动生成，用 &lt;key&gt; 占位符">
+                </div>
+                <div class="form-actions">
+                  <button type="submit" class="btn btn-primary">保存设置</button>
+                  <span id="settings-status" class="save-status"></span>
+                </div>
+              </form>
+            </div>
+
+            <div class="card glass-card">
+              <h3 class="card-title">推流信息</h3>
+              <div class="form-group">
+                <label class="form-label">RTMP 地址</label>
+                <div class="input-copy">
+                  <input type="text" id="info-rtmpUrl" class="form-input" readonly>
+                  <button class="btn btn-secondary btn-copy" data-target="info-rtmpUrl">复制</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">流密钥</label>
+                <div class="input-copy">
+                  <input type="text" id="info-streamKey" class="form-input form-input-monospace" readonly>
+                  <button class="btn btn-secondary btn-copy" data-target="info-streamKey">复制</button>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">观众链接</label>
+                <div class="input-copy">
+                  <input type="text" id="info-hlsUrl" class="form-input" readonly>
+                  <button class="btn btn-secondary btn-copy" data-target="info-hlsUrl">复制</button>
+                </div>
+              </div>
+              <div class="stream-actions">
+                <button id="btn-copy-all" class="btn btn-secondary">复制全部推流信息</button>
+                <button id="btn-reset-key" class="btn btn-danger">重置密钥</button>
+              </div>
+              <p class="hint-text">重置后旧密钥立即失效，请更新 OBS 配置</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 在线用户 -->
+        <section id="section-users" class="section">
+          <h1 class="section-title">在线用户</h1>
+          <div class="card glass-card">
+            <div class="table-toolbar">
+              <div class="search-box">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input type="text" id="users-search" class="form-input search-input" placeholder="搜索昵称 / QQ">
+              </div>
+              <button id="btn-refresh-users" class="btn btn-secondary">刷新</button>
+            </div>
+            <div id="users-empty" class="empty-state">暂无在线用户</div>
+            <table id="users-table" class="data-table" style="display: none;">
+              <thead>
+                <tr>
+                  <th>用户</th>
+                  <th>QQ</th>
+                  <th>进入时间</th>
+                  <th>在线时长</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="users-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 黑名单 -->
+        <section id="section-blacklist" class="section">
+          <h1 class="section-title">黑名单</h1>
+
+          <div class="card glass-card">
+            <h3 class="card-title">添加黑名单</h3>
+            <form id="blacklist-form" class="blacklist-form">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">封禁对象</label>
+                  <input type="text" id="blacklist-ident" class="form-input" placeholder="请输入昵称或 QQ 号" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">类型</label>
+                  <select id="blacklist-type" class="form-select">
+                    <option value="name">昵称</option>
+                    <option value="qq">QQ号</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">备注</label>
+                  <input type="text" id="blacklist-note" class="form-input" placeholder="可选备注">
+                </div>
+                <div class="form-group form-group-auto">
+                  <label class="form-label">&nbsp;</label>
+                  <button type="submit" class="btn btn-primary">添加</button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <div class="card glass-card">
+            <div class="table-toolbar">
+              <h3 class="card-title">黑名单列表</h3>
+              <div class="toolbar-right">
+                <div class="search-box">
+                  <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                  <input type="text" id="blacklist-search" class="form-input search-input" placeholder="搜索封禁对象">
+                </div>
+                <button id="btn-export-blacklist" class="btn btn-secondary btn-sm">导出 CSV</button>
+              </div>
+            </div>
+            <div id="blacklist-empty" class="empty-state">暂无黑名单记录</div>
+            <table id="blacklist-table" class="data-table" style="display: none;">
+              <thead>
+                <tr>
+                  <th>封禁对象</th>
+                  <th>类型</th>
+                  <th>备注</th>
+                  <th>添加时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="blacklist-tbody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- 修改密码 -->
+        <section id="section-password" class="section">
+          <h1 class="section-title">修改密码</h1>
+          <div class="card glass-card card-small">
+            <form id="password-form" class="password-form">
+              <div class="form-group">
+                <label class="form-label">原密码</label>
+                <input type="password" id="old-password" class="form-input" placeholder="请输入原密码" required>
+              </div>
+              <div class="form-group">
+                <label class="form-label">新密码</label>
+                <input type="password" id="new-password" class="form-input" placeholder="请输入新密码 (至少 6 位)" required minlength="6">
+              </div>
+              <div class="form-group">
+                <label class="form-label">确认新密码</label>
+                <input type="password" id="confirm-password" class="form-input" placeholder="请再次输入新密码" required>
+              </div>
+              <button type="submit" class="btn btn-primary">修改密码</button>
+            </form>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Toast 容器 -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/vendor/echarts/echarts.min.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>
